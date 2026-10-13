@@ -1,0 +1,341 @@
+name: Build Step by N APK
+on:
+  push:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+      - name: Create Android project (config and resources)
+        run: |
+          mkdir -p "$(dirname 'StepByN/settings.gradle.kts')"
+          cat > 'StepByN/settings.gradle.kts' <<'SBN_EOF'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
+          rootProject.name = "StepByN"
+          include(":app")
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/build.gradle.kts')"
+          cat > 'StepByN/build.gradle.kts' <<'SBN_EOF'
+          plugins {
+              id("com.android.application") version "8.5.2" apply false
+              id("org.jetbrains.kotlin.android") version "1.9.24" apply false
+          }
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/gradle.properties')"
+          cat > 'StepByN/gradle.properties' <<'SBN_EOF'
+          org.gradle.jvmargs=-Xmx2g -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          kotlin.code.style=official
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/AndroidManifest.xml')"
+          cat > 'StepByN/app/src/main/AndroidManifest.xml' <<'SBN_EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+              <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+              <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+              <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+
+              <application
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:roundIcon="@mipmap/ic_launcher_round"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.StepByN">
+                  <activity android:name=".MainActivity" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+                  <service android:name=".StepService" android:exported="false" android:foregroundServiceType="health" />
+                  <receiver android:name=".BootReceiver" android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.BOOT_COMPLETED" />
+                          <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                      </intent-filter>
+                  </receiver>
+              </application>
+          </manifest>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/values/strings.xml')"
+          cat > 'StepByN/app/src/main/res/values/strings.xml' <<'SBN_EOF'
+          <resources><string name="app_name">Step by N</string></resources>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/values/themes.xml')"
+          cat > 'StepByN/app/src/main/res/values/themes.xml' <<'SBN_EOF'
+          <resources>
+            <style name="Theme.StepByN" parent="android:Theme.Material.Light.NoActionBar">
+              <item name="android:statusBarColor">#D12BC4</item>
+              <item name="android:windowBackground">#FFF1F7</item>
+            </style>
+          </resources>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/drawable/ic_launcher_background.xml')"
+          cat > 'StepByN/app/src/main/res/drawable/ic_launcher_background.xml' <<'SBN_EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+          <path android:pathData="M0,0H108V108H0Z"><aapt:attr name="android:fillColor"><gradient android:startX="0" android:startY="0" android:endX="108" android:endY="108" android:type="linear"><item android:offset="0" android:color="#FF3D81"/><item android:offset="1" android:color="#6D4BFF"/></gradient></aapt:attr></path>
+          </vector>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/drawable/ic_launcher_foreground.xml')"
+          cat > 'StepByN/app/src/main/res/drawable/ic_launcher_foreground.xml' <<'SBN_EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+          <group android:scaleX="0.62" android:scaleY="0.62" android:translateX="34" android:translateY="34">
+          <path android:pathData="M16,45V19L38,45V19" android:strokeColor="#FFFFFF" android:strokeWidth="7" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#00000000"/>
+          <group android:pivotX="50" android:pivotY="46" android:rotation="12"><path android:fillColor="#FFD6BD" android:pathData="M46.04,49a3.96,6.24 0 1,0 7.92,0a3.96,6.24 0 1,0 -7.92,0Z M45.8,41.2a1.6,1.6 0 1,0 3.2,0a1.6,1.6 0 1,0 -3.2,0Z M48.2,39.6a1.8,1.8 0 1,0 3.6,0a1.8,1.8 0 1,0 -3.6,0Z M51,41.2a1.6,1.6 0 1,0 3.2,0a1.6,1.6 0 1,0 -3.2,0Z"/></group>
+          <group android:pivotX="51" android:pivotY="21" android:rotation="-8"><path android:fillColor="#FFF0B8" android:pathData="M47.04,24a3.96,6.24 0 1,0 7.92,0a3.96,6.24 0 1,0 -7.92,0Z M46.8,16.2a1.6,1.6 0 1,0 3.2,0a1.6,1.6 0 1,0 -3.2,0Z M49.2,14.6a1.8,1.8 0 1,0 3.6,0a1.8,1.8 0 1,0 -3.6,0Z M52,16.2a1.6,1.6 0 1,0 3.2,0a1.6,1.6 0 1,0 -3.2,0Z"/></group>
+          </group>
+          </vector>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/drawable/ic_stat_step.xml')"
+          cat > 'StepByN/app/src/main/res/drawable/ic_stat_step.xml' <<'SBN_EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+          <path android:fillColor="#FFFFFF" android:pathData="M8,15a4,6 0 1,0 8,0a4,6 0 1,0 -8,0Z M7.4,6.5a1.5,1.5 0 1,0 3,0a1.5,1.5 0 1,0 -3,0Z M10.5,4.8a1.6,1.6 0 1,0 3.2,0a1.6,1.6 0 1,0 -3.2,0Z M13.6,6.5a1.5,1.5 0 1,0 3,0a1.5,1.5 0 1,0 -3,0Z"/>
+          </vector>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml')"
+          cat > 'StepByN/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml' <<'SBN_EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@drawable/ic_launcher_background"/>
+            <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml')"
+          cat > 'StepByN/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml' <<'SBN_EOF'
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+            <background android:drawable="@drawable/ic_launcher_background"/>
+            <foreground android:drawable="@drawable/ic_launcher_foreground"/>
+          </adaptive-icon>
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/build.gradle.kts')"
+          cat > 'StepByN/app/build.gradle.kts' <<'SBN_EOF'
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+          android {
+              namespace = "com.nadiayousuf.stepbyn"
+              compileSdk = 34
+              defaultConfig {
+                  applicationId = "com.nadiayousuf.stepbyn"
+                  minSdk = 26
+                  targetSdk = 34
+                  versionCode = 1
+                  versionName = "1.0"
+              }
+              buildTypes { release { isMinifyEnabled = false } }
+              compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+              kotlinOptions { jvmTarget = "17" }
+          }
+          dependencies { implementation("androidx.core:core-ktx:1.13.1") }
+          SBN_EOF
+      - name: Create Android project (Kotlin code)
+        run: |
+          mkdir -p "$(dirname 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/StepService.kt')"
+          cat > 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/StepService.kt' <<'SBN_EOF'
+          package com.nadiayousuf.stepbyn
+
+          import android.app.*
+          import android.content.Context
+          import android.content.Intent
+          import android.content.pm.ServiceInfo
+          import android.hardware.Sensor
+          import android.hardware.SensorEvent
+          import android.hardware.SensorEventListener
+          import android.hardware.SensorManager
+          import android.os.Build
+          import android.os.IBinder
+
+          /** Foreground service that listens to the hardware step counter 24/7, even when the app UI is closed. */
+          class StepService : Service(), SensorEventListener {
+              private lateinit var sm: SensorManager
+              private var lastNotify = 0L
+
+              override fun onBind(intent: Intent?): IBinder? = null
+
+              override fun onCreate() {
+                  super.onCreate()
+                  val nm = getSystemService(NotificationManager::class.java)
+                  nm.createNotificationChannel(NotificationChannel(CH, "Step counting", NotificationManager.IMPORTANCE_LOW))
+                  val n = notification(Store.steps(this))
+                  if (Build.VERSION.SDK_INT >= 34) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
+                  else startForeground(ID, n)
+                  sm = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                  sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)?.let {
+                      sm.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL, 30_000_000)
+                  }
+              }
+
+              override fun onStartCommand(intent: Intent?, flags: Int, startId: Int) = START_STICKY
+
+              override fun onSensorChanged(e: SensorEvent) {
+                  val steps = Store.onSensorTotal(this, e.values[0].toLong())
+                  val now = System.currentTimeMillis()
+                  if (now - lastNotify > 10_000) {
+                      lastNotify = now
+                      getSystemService(NotificationManager::class.java).notify(ID, notification(steps))
+                  }
+              }
+
+              override fun onAccuracyChanged(s: Sensor?, a: Int) {}
+
+              override fun onDestroy() {
+                  if (::sm.isInitialized) sm.unregisterListener(this)
+                  super.onDestroy()
+              }
+
+              private fun notification(steps: Int): Notification {
+                  val pi = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+                  return Notification.Builder(this, CH)
+                      .setSmallIcon(R.drawable.ic_stat_step)
+                      .setContentTitle("Step by N")
+                      .setContentText("%,d steps today".format(steps))
+                      .setContentIntent(pi)
+                      .setOngoing(true)
+                      .build()
+              }
+
+              companion object { const val CH = "steps"; const val ID = 1 }
+          }
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/BootReceiver.kt')"
+          cat > 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/BootReceiver.kt' <<'SBN_EOF'
+          package com.nadiayousuf.stepbyn
+
+          import android.content.BroadcastReceiver
+          import android.content.Context
+          import android.content.Intent
+
+          /** Restarts step counting after the phone reboots or the app is updated. */
+          class BootReceiver : BroadcastReceiver() {
+              override fun onReceive(c: Context, i: Intent) {
+                  try { c.startForegroundService(Intent(c, StepService::class.java)) } catch (e: Exception) { }
+              }
+          }
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/Store.kt')"
+          cat > 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/Store.kt' <<'SBN_EOF'
+          package com.nadiayousuf.stepbyn
+
+          import android.content.Context
+          import java.time.LocalDate
+
+          /** On-device storage of daily step totals. */
+          object Store {
+              private fun sp(c: Context) = c.applicationContext.getSharedPreferences("sbn_steps", Context.MODE_PRIVATE)
+              fun today(): String = LocalDate.now().toString()
+              fun steps(c: Context, date: String = today()): Int = sp(c).getInt("s_$date", 0)
+
+              fun lastSevenDays(c: Context): List<Pair<String, Int>> {
+                  val t = LocalDate.now()
+                  return (6 downTo 0).map { val d = t.minusDays(it.toLong()).toString(); d to steps(c, d) }
+              }
+
+              /** Receives the sensor running total. Handles first run and phone reboots (counter resets to 0). */
+              @Synchronized
+              fun onSensorTotal(c: Context, total: Long): Int {
+                  val s = sp(c)
+                  val last = s.getLong("last", -1L)
+                  val delta = when {
+                      last < 0 -> 0L
+                      total >= last -> total - last
+                      else -> total
+                  }
+                  val key = "s_" + today()
+                  val now = s.getInt(key, 0) + delta.toInt()
+                  s.edit().putLong("last", total).putInt(key, now).apply()
+                  return now
+              }
+          }
+          SBN_EOF
+          mkdir -p "$(dirname 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/MainActivity.kt')"
+          cat > 'StepByN/app/src/main/java/com/nadiayousuf/stepbyn/MainActivity.kt' <<'SBN_EOF'
+          package com.nadiayousuf.stepbyn
+
+          import android.Manifest
+          import android.app.Activity
+          import android.content.Context
+          import android.content.Intent
+          import android.content.pm.PackageManager
+          import android.hardware.Sensor
+          import android.hardware.SensorManager
+          import android.os.Build
+          import android.os.Bundle
+          import android.webkit.JavascriptInterface
+          import android.webkit.WebView
+
+          class MainActivity : Activity() {
+              private lateinit var web: WebView
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  web = WebView(this)
+                  setContentView(web)
+                  web.settings.javaScriptEnabled = true
+                  web.settings.domStorageEnabled = true
+                  web.addJavascriptInterface(Bridge(applicationContext), "AndroidSteps")
+                  web.loadUrl("file:///android_asset/index.html")
+                  askPermissions()
+              }
+
+              override fun onResume() { super.onResume(); startCounting() }
+
+              override fun onBackPressed() { moveTaskToBack(true) }
+
+              private fun askPermissions() {
+                  val need = mutableListOf<String>()
+                  if (Build.VERSION.SDK_INT >= 29 && checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.ACTIVITY_RECOGNITION)
+                  if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) need.add(Manifest.permission.POST_NOTIFICATIONS)
+                  if (need.isNotEmpty()) requestPermissions(need.toTypedArray(), 1) else startCounting()
+              }
+
+              override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+                  super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+                  startCounting()
+              }
+
+              private fun startCounting() {
+                  if (Build.VERSION.SDK_INT < 29 || checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_GRANTED) {
+                      try { startForegroundService(Intent(this, StepService::class.java)) } catch (e: Exception) { }
+                  }
+              }
+          }
+
+          /** Methods the web page calls as AndroidSteps.today(), .week(), .status() */
+          class Bridge(private val c: Context) {
+              @JavascriptInterface fun today(): Int = Store.steps(c)
+              @JavascriptInterface fun week(): String = Store.lastSevenDays(c).joinToString(",", "[", "]") { it.second.toString() }
+              @JavascriptInterface fun status(): String {
+                  val sm = c.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                  if (sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) == null) return "No step sensor"
+                  if (Build.VERSION.SDK_INT >= 29 && c.checkSelfPermission(Manifest.permission.ACTIVITY_RECOGNITION) != PackageManager.PERMISSION_GRANTED) return "Permission needed"
+                  return "Counting ON"
+              }
+          }
+          SBN_EOF
+      - name: Add the app page (your .html file)
+        run: |
+          if ! ls *.html >/dev/null 2>&1; then echo "ERROR: upload the .html file to the repository root"; exit 1; fi
+          mkdir -p StepByN/app/src/main/assets
+          cp "$(ls *.html | head -1)" StepByN/app/src/main/assets/index.html
+      - name: Build APK
+        working-directory: StepByN
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+          gradle assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StepByN-APK
+          path: StepByN/app/build/outputs/apk/debug/app-debug.apk

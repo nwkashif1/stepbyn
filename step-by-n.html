@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Step by N – Step Counter</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FFF1F7;--bgg:radial-gradient(60% 38% at 0% 0%,#FFCBE2,transparent),radial-gradient(55% 38% at 100% 22%,#E2D2FF,transparent),radial-gradient(70% 40% at 40% 100%,#FFE3CE,transparent);--card:#fff;--ink:#2B1233;--mute:#7E6479;--pine:#D4136B;--mint:#FF8FB8;--sun:#FFE0B8;--line:#F3D9E6;--track:#F4E3EC;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1E0F2E;--bgg:linear-gradient(180deg,#2B1042,#16113A);--card:#33174A;--ink:#FFF0F7;--mute:#D3A9CC;--line:#4D2A68;--track:#4D2A68}}
+:root[data-theme="dark"]{--bg:#1E0F2E;--bgg:linear-gradient(180deg,#2B1042,#16113A);--card:#33174A;--ink:#FFF0F7;--mute:#D3A9CC;--line:#4D2A68;--track:#4D2A68}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);background-image:var(--bgg);background-attachment:fixed;color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;display:flex;justify-content:center;min-height:100vh}
+.app{width:100%;max-width:430px;min-height:100vh;position:relative;padding-bottom:84px}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.03em;font-size:21px;background:linear-gradient(90deg,#FF2E7E,#C026D3 50%,#7C3AED);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand svg{width:34px;height:34px}
+.pill{font-size:12px;font-weight:600;padding:6px 12px;border-radius:99px;background:linear-gradient(100deg,#FF3D81,#C026D3 60%,#7C3AED);color:#fff;border:0;cursor:pointer;box-shadow:0 6px 14px rgba(192,38,211,.35);display:flex;align-items:center;gap:6px}
+.pill i{width:8px;height:8px;border-radius:50%;background:#fff;animation:p 1.6s infinite}
+.pill.off{background:var(--track);color:var(--mute);box-shadow:none}.pill.off i{background:var(--mute);animation:none}
+@keyframes p{50%{opacity:.25}}
+.ic{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:17px;cursor:pointer;display:grid;place-items:center;box-shadow:0 6px 14px -4px rgba(214,40,140,.3)}
+#splash .by{position:absolute;bottom:calc(30px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;line-height:1.55;opacity:.92}#splash .by b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em}
+.goals{display:flex;gap:8px}.goals button{flex:1;padding:10px 4px;border-radius:16px;border:0;background:var(--track);color:var(--ink);font:inherit;font-size:12px;font-weight:700;cursor:pointer}.goals button.s{background:linear-gradient(120deg,#FF3D81,#C026D3 60%,#7C3AED);color:#fff;box-shadow:0 6px 14px rgba(192,38,211,.3)}
+.stq{display:flex;align-items:center;gap:12px}.stq button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px;cursor:pointer}.stq b{min-width:64px;text-align:center}
+.mh{display:flex;align-items:center;gap:12px}.mh>div:nth-child(2){flex:1}.mi{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;font-size:28px;flex:none}.tm{font-size:12px;font-weight:700;padding:5px 10px;border-radius:99px;background:var(--track)}
+.fd{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line)}.fd .e{font-size:26px;width:46px;height:46px;border-radius:15px;background:var(--track);display:grid;place-items:center;flex:none}.fd div{flex:1;font-size:14px;font-weight:700}.fd small{display:block;color:var(--mute);font-weight:500;font-size:12px}.fd b{font-size:13px}
+.act{display:flex;gap:8px;margin-top:12px}.act button{flex:1;padding:10px 4px;border-radius:14px;border:0;font:inherit;font-weight:700;font-size:12px;cursor:pointer;background:var(--track);color:var(--ink)}.act button.ok{background:linear-gradient(135deg,#3DD6B5,#5EB8FF);color:#fff}
+section{display:none;padding:8px 20px}section.on{display:block}
+h2{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:6px 0 14px}
+.card{background:var(--card);border-radius:26px;padding:18px;margin-bottom:14px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(120,40,100,.06),0 14px 30px -10px rgba(214,40,140,.25)}.chip{padding:8px 14px;border-radius:99px;font-size:13px;font-weight:700;color:#3B1F33}.gl{flex:1;height:38px;border-radius:12px;border:0;background:var(--track);font-size:15px;cursor:pointer;filter:grayscale(1);opacity:.6}.gl.on{background:linear-gradient(180deg,#9BDDFF,#5EB8FF);filter:none;opacity:1}
+.hero{background:radial-gradient(circle at 90% 6%,rgba(255,214,90,.75),transparent 34%),radial-gradient(circle at 5% 100%,rgba(70,180,255,.55),transparent 42%),linear-gradient(150deg,#FF2E7E 0%,#D12BC4 50%,#6D4BFF 100%);color:#fff;box-shadow:0 18px 40px -12px rgba(160,40,200,.55);border:0;text-align:center;padding:22px 18px 18px}
+.ring{position:relative;width:220px;height:220px;margin:0 auto}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.big{font-size:48px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.sub{font-size:13px;opacity:.7;margin-top:6px}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{border:0;border-radius:24px;padding:14px 10px;text-align:center;color:#3B1F33;box-shadow:0 6px 16px rgba(139,92,246,.12)}.stat:nth-child(1){background:linear-gradient(160deg,#F0E8FF,#D6C4FF)}.stat:nth-child(2){background:linear-gradient(160deg,#FFEBDD,#FFC6A3)}.stat:nth-child(3){background:linear-gradient(160deg,#E0FBF3,#A6EBD6)}
+.stat b{display:block;font-size:22px;font-weight:800}.stat span{font-size:12px;color:#7A5C70;font-weight:600}
+.stat em{display:block;font-style:normal;font-size:20px;margin-bottom:4px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:90px;margin-top:12px}
+.bars div{flex:1;background:linear-gradient(180deg,#FF3D81,#C026D3 55%,#8B5CF6);border-radius:4px 4px 2px 2px;min-height:3px}
+.bars div.f{background:var(--track)}
+.lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:6px}
+.wk{display:flex;align-items:flex-end;gap:8px;height:150px}
+.wk button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px;color:var(--mute);font:inherit;font-size:12px;cursor:pointer}
+.wk i{display:block;width:100%;border-radius:10px;background:linear-gradient(180deg,#EADCFF,#D2BBFF);transition:height .3s}
+.wk button.s{color:var(--ink);font-weight:600}.wk button.s i{background:linear-gradient(180deg,#FFB347,#FF3D81 55%,#C026D3)}
+.wk button.g i{background:linear-gradient(180deg,#6EF0D5,#14B8A6)}
+.t{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.t:last-child{border:0}.t small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.step:last-child{border:0}
+.chk{flex:none;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:14px;color:transparent}
+.step.d .chk{background:linear-gradient(135deg,#FF3D81,#7C3AED);border-color:transparent;color:#fff}
+.step b{display:block;font-size:15px}.step small{color:var(--mute);font-size:13px;line-height:1.4}
+.prog{height:8px;background:var(--track);border-radius:9px;overflow:hidden;margin:6px 0 4px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#FF3D81,#C026D3 60%,#7C3AED);width:0;transition:width .3s}
+.stp{display:flex;align-items:center;gap:12px}
+.stp button{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:18px;cursor:pointer}
+.stp b{min-width:64px;text-align:center;font-size:18px}
+.bmi{background:linear-gradient(135deg,#FFE066,#FFB347 50%,#FF7A59);color:#3F1D00;border:0}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-top:1px solid var(--line);display:flex;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1;border:0;background:none;color:var(--mute);font:inherit;font-size:11px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;cursor:pointer}
+nav button svg{width:24px;height:24px}
+nav button.on{color:#D4136B;font-weight:800;background:linear-gradient(180deg,#FFE3EF,#F1E4FF);border-radius:16px}
+nav button.on svg{color:var(--pine)}
+@media (prefers-color-scheme:dark){nav button.on svg{color:var(--mint)}}
+#splash{position:fixed;inset:0;background:linear-gradient(160deg,#FF2E7E,#C026D3 55%,#5B5BFF);z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;transition:opacity .6s,visibility .6s;cursor:pointer}
+#splash.h{opacity:0;visibility:hidden}
+#splash svg{width:120px;height:120px;filter:drop-shadow(0 10px 22px rgba(0,0,0,.28))}
+#splash h1{font-size:38px;font-weight:800;letter-spacing:-.02em}#splash p{opacity:.65;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="logo" viewBox="0 0 64 64"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF3D81"/><stop offset="1" stop-color="#6D4BFF"/></linearGradient></defs><rect width="64" height="64" rx="18" fill="url(#lg)" stroke="rgba(255,255,255,.7)" stroke-width="2"/><path d="M16 45V19l22 26V19" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(50 46) rotate(12) scale(1.2)" fill="#FFD6BD"><ellipse cx="0" cy="2.5" rx="3.3" ry="5.2"/><circle cx="-2.6" cy="-4" r="1.35"/><circle cx="0" cy="-5.3" r="1.5"/><circle cx="2.6" cy="-4" r="1.35"/></g><g transform="translate(51 21) rotate(-8) scale(1.2)" fill="#FFF0B8"><ellipse cx="0" cy="2.5" rx="3.3" ry="5.2"/><circle cx="-2.6" cy="-4" r="1.35"/><circle cx="0" cy="-5.3" r="1.5"/><circle cx="2.6" cy="-4" r="1.35"/></g></symbol>
+</defs></svg>
+
+<div id="splash"><svg><use href="#logo"/></svg><h1>Step by N</h1><p>Every step counts.</p><div class="by">Developed by<b>Nadia Yousuf</b>Professional Nurse &amp; Research Instructor</div></div>
+
+<div class="app">
+<header>
+  <div class="brand"><svg><use href="#logo"/></svg>Step by N</div>
+  <div style="display:flex;gap:8px;align-items:center"><button class="ic" id="tg" aria-label="Switch light or dark mode">🌙</button><button class="pill" id="live" aria-label="Counting status"><i></i><span>Counting ON</span></button></div>
+</header>
+
+<section id="home" class="on">
+  <p style="font-size:16px;font-weight:600;margin:2px 2px 12px">Hello ✨ Let's reach today's goal.</p>
+  <div class="card hero">
+    <div class="ring"><svg viewBox="0 0 220 220"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF08A"/><stop offset="1" stop-color="#FF9A5A"/></linearGradient></defs><circle cx="110" cy="110" r="94" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="16"/><circle id="arc" cx="110" cy="110" r="94" fill="none" stroke="url(#ag)" stroke-width="16" stroke-linecap="round" stroke-dasharray="590.6" stroke-dashoffset="590.6" style="transition:stroke-dashoffset .6s"/></svg>
+      <div class="c"><div class="big" id="steps">0</div><div class="sub">steps today</div></div></div>
+    <div class="sub" id="goalTxt" style="margin-top:14px"></div>
+  </div>
+  <div class="row">
+    <div class="stat"><em>🌸</em><b id="km">0</b><span>km</span></div>
+    <div class="stat"><em>💗</em><b id="kcal">0</b><span>calories</span></div>
+    <div class="stat"><em>⚡</em><b id="min">0</b><span>active min</span></div>
+  </div>
+  <div class="card" id="hrc" style="margin-top:14px"><b>Today, hour by hour</b><div class="bars" id="hours"></div><div class="lbl"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div></div>
+  <div class="card"><b>💧 Hydration</b><span id="wt" style="float:right;font-size:13px;color:var(--mute)"></span><div id="wg" style="display:flex;gap:6px;margin-top:12px"></div></div>
+  <div class="card" style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip" style="background:#FFD9E8">🔥 3-day streak</span><span class="chip" style="background:#E9DEFF">🏅 5K badge</span><span class="chip" style="background:#D3F6EC">🌸 Weekly goal</span><span class="chip" style="background:#FFE9C7">✨ Early bird</span></div>
+  <div class="card"><b>Counts in the background</b><p style="font-size:13px;color:var(--mute);margin-top:6px;line-height:1.5">Your phone's step sensor keeps counting even when the app is closed. For best results, complete the setup steps in the Guide tab.</p></div>
+  <p style="text-align:center;font-size:12px;color:var(--mute);font-weight:600;margin:4px 0 16px">Developed by Nadia Yousuf</p>
+</section>
+
+<section id="hist">
+  <h2>History</h2>
+  <div class="card"><div class="wk" id="wk"></div></div>
+  <div class="card hero" style="text-align:left"><div style="font-size:13px;opacity:.7" id="hd"></div><div class="big" id="hs" style="margin:6px 0 12px"></div>
+    <div style="display:flex;gap:22px;font-size:14px"><span id="hk"></span><span id="hc"></span><span id="hm"></span></div></div>
+  <div class="card"><div class="t"><span>Weekly total<small>7 days</small></span><b id="tot"></b></div><div class="t"><span>Daily average</span><b id="avg"></b></div><div class="t"><span>Goals reached<small>days</small></span><b id="gd"></b></div></div>
+</section>
+
+<section id="diet">
+  <h2>Diet plan</h2>
+  <div class="card hero" style="background:linear-gradient(150deg,#FF8A4C,#FF2E7E 50%,#B026D9);text-align:left">
+    <div style="display:flex;align-items:center;gap:14px"><div style="width:58px;height:58px;border-radius:20px;background:rgba(255,255,255,.28);display:grid;place-items:center;font-size:32px">🥗</div><div><b style="font-size:18px">Your daily plan</b><div class="sub" style="margin:2px 0 0">Based on your weight of <span id="dw"></span> kg</div></div></div>
+    <div style="display:flex;align-items:baseline;gap:8px;margin-top:16px"><div class="big" id="dT"></div><div class="sub" style="margin:0">kcal / day</div></div>
+    <div class="prog" style="background:rgba(255,255,255,.3)"><i id="dpb" style="background:#FFE066"></i></div>
+    <div class="sub"><span id="dE">0</span> kcal eaten</div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><span class="chip" style="background:rgba(255,255,255,.92)">💪 Protein <span id="dP"></span></span><span class="chip" style="background:rgba(255,255,255,.92)">💧 Water <span id="dW"></span></span></div>
+  </div>
+  <div class="card"><b>Your goal</b>
+    <div class="goals" id="dg" style="margin:10px 0 14px"><button data-g="0">📉 Lose weight</button><button data-g="1">⚖️ Maintain</button><button data-g="2">📈 Gain weight</button></div>
+    <div class="t" style="padding:0;border:0"><span>Age</span><div class="stq" id="da"><button data-d="-1">−</button><b id="va"></b><button data-d="1">+</button></div></div>
+    <p id="dn" style="font-size:13px;color:#C2185B;margin-top:10px;font-weight:600"></p></div>
+  <div id="dm"></div>
+  <p style="font-size:12px;color:var(--mute);line-height:1.5;margin:4px 4px 16px">These are general estimates, not medical advice. If you have a medical condition, are pregnant or are breastfeeding, consult your doctor or a dietitian first.</p>
+</section>
+
+<section id="guide">
+  <h2>Setup guide</h2>
+  <div class="card"><b>5 settings for Vivo phones</b><div class="prog"><i id="gp"></i></div><small id="gt" style="color:var(--mute)"></small>
+    <div style="margin-top:6px" id="gl"></div></div>
+  <div class="card" style="background:var(--sun);color:#3A2800;border:0"><b>Important</b><p style="font-size:13px;margin-top:6px;line-height:1.5">If you use "Force Stop" in Settings, no app can keep counting. Swiping the app away from recent apps is fine.</p></div>
+</section>
+
+<section id="prof">
+  <h2>Profile</h2>
+  <div class="card">
+    <div class="t"><span>Weight<small>used for calories</small></span><div class="stp"><button data-k="w" data-d="-1">−</button><b id="vw"></b><button data-k="w" data-d="1">+</button></div></div>
+    <div class="t"><span>Height<small>used for distance</small></span><div class="stp"><button data-k="h" data-d="-1">−</button><b id="vh"></b><button data-k="h" data-d="1">+</button></div></div>
+    <div class="t"><span>Daily goal<small>steps</small></span><div class="stp"><button data-k="g" data-d="-500">−</button><b id="vg"></b><button data-k="g" data-d="500">+</button></div></div>
+  </div>
+  <div class="card bmi"><div style="font-size:13px">Your BMI</div><div class="big" id="bmi" style="margin:4px 0"></div><div id="bmit" style="font-size:14px"></div></div>
+  <div class="card"><b>Appearance</b><div class="goals" id="tm" style="margin-top:12px"><button data-m="light">☀️ Light</button><button data-m="dark">🌙 Dark</button><button data-m="auto">⚙️ Auto</button></div></div>
+  <div class="card" style="text-align:center"><div style="width:68px;height:68px;margin:0 auto 12px;border-radius:50%;background:linear-gradient(135deg,#FF3D81,#7C3AED);color:#fff;display:grid;place-items:center;font-weight:800;font-size:24px;box-shadow:0 10px 22px -6px rgba(192,38,211,.5)">NY</div><div style="font-size:12px;color:var(--mute);font-weight:600">Developed by</div><div style="font-size:21px;font-weight:800;letter-spacing:-.02em;margin:2px 0 12px">Nadia Yousuf</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><span class="chip" style="background:#FFD9E8">🩺 Professional Nurse</span><span class="chip" style="background:#E9DEFF">🔬 Professional Research Instructor</span></div><div style="font-size:11px;color:var(--mute);margin-top:14px">Step by N v1.0</div></div>
+</section>
+
+<nav>
+  <button class="on" data-t="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+  <button data-t="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>History</button>
+  <button data-t="diet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7c-2-2-7-1-7 5 0 5 3 9 5 9 1 0 1.5-.5 2-.5s1 .5 2 .5c2 0 5-4 5-9 0-6-5-7-7-5z"/><path d="M12 7c0-2 1-4 3-5"/></svg>Diet</button>
+  <button data-t="guide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>Guide</button>
+  <button data-t="prof"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Profile</button>
+</nav>
+</div>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var NATIVE=!!window.AndroidSteps,P={w:70,h:170,g:8000},steps=NATIVE?0:5230,liveOn=true,sel=6;
+var week=NATIVE?[0,0,0,0,0,0,0]:[7420,9100,6350,10240,8800,4120,5230],days=[];for(var di=6;di>=0;di--){var dd=new Date();dd.setDate(dd.getDate()-di);days.push(di?dd.toLocaleDateString('en-US',{weekday:'short'}):'Today')}
+var hrs=[0,0,0,0,0,40,320,780,420,180,260,340,520,280,190,210,360,610,480,230,0,0,0,0];
+var tips=[["Background power consumption","Settings → Battery → Background power consumption → set Step by N to High."],["Autostart ON","Settings → Apps → Autostart → turn Step by N on."],["Battery optimization","Settings → Battery → set Step by N to Unrestricted."],["Lock in recent apps","Open recent apps, then pull the Step by N card down to lock it."],["Allow permissions","Grant Physical activity and Notifications access."]];
+var done=[];
+function f(n){return Math.round(n).toLocaleString('en-US')}
+function calc(s){var km=s*P.h*0.415/100000;return{km:km,kc:km*P.w*0.9,m:s/100}}
+function home(){var c=calc(steps);$('steps').textContent=f(steps);$('km').textContent=c.km.toFixed(2);$('kcal').textContent=f(c.kc);$('min').textContent=Math.round(c.m);
+$('arc').style.strokeDashoffset=590.6*(1-Math.min(1,steps/P.g));
+var l=P.g-steps;$('goalTxt').textContent=l>0?f(l)+' steps to reach your '+f(P.g)+' goal':'Goal reached. Well done! 🎉';
+var h='';for(var i=0;i<24;i++){h+='<div class="'+(i>14?'f':'')+'" style="height:'+Math.max(3,hrs[i]/8)+'%"></div>'}$('hours').innerHTML=h}
+function hist(){week[6]=steps;var mx=Math.max.apply(null,week.concat([P.g])),h='',t=0,g=0;
+week.forEach(function(v,i){t+=v;if(v>=P.g)g++;h+='<button class="'+(i==sel?'s ':'')+(v>=P.g?'g':'')+'" data-i="'+i+'"><i style="height:'+(v/mx*100)+'%"></i>'+days[i]+'</button>'});
+$('wk').innerHTML=h;var c=calc(week[sel]);$('hd').textContent=days[sel]==='Today'?'Today':days[sel];$('hs').textContent=f(week[sel])+' steps';
+$('hk').textContent=c.km.toFixed(1)+' km';$('hc').textContent=f(c.kc)+' kcal';$('hm').textContent=Math.round(c.m)+' min';
+$('tot').textContent=f(t);$('avg').textContent=f(t/7);$('gd').textContent=g+' / 7'}
+function prof(){$('vw').textContent=P.w+' kg';$('vh').textContent=P.h+' cm';$('vg').textContent=f(P.g);
+var b=P.w/Math.pow(P.h/100,2);$('bmi').textContent=b.toFixed(1);$('bmit').textContent=b<18.5?'Underweight':b<25?'Healthy range':b<30?'Overweight':'Obese range'}
+function guide(){var h='';tips.forEach(function(t,i){h+='<div class="step'+(done[i]?' d':'')+'" data-i="'+i+'"><div class="chk">✓</div><div><b>'+t[0]+'</b><small>'+t[1]+'</small></div></div>'});
+$('gl').innerHTML=h;var n=done.filter(Boolean).length;$('gp').style.width=n/5*100+'%';$('gt').textContent=n+' / 5 completed'}
+var wat=5;function wtr(){var h='';for(var i=0;i<8;i++)h+='<button class="gl'+(i<wat?' on':'')+'" data-i="'+i+'">💧</button>';$('wg').innerHTML=h;$('wt').textContent=wat+' / 8 glasses'}
+$('wg').onclick=function(e){var b=e.target.closest('button');if(b){var n=+b.dataset.i+1;wat=n===wat?n-1:n;wtr()}};
+var A={a:25,goal:1},eat=[0,0,0,0,0],opt=[0,0,0,0,0],rem=[1,1,1,1,1];
+var M=[
+{n:'Breakfast',t:'8:00 AM',p:.25,i:'🌅',c:'#FFE1D1',o:[[['🍳','Boiled eggs','egg',2,75],['🫓','Whole wheat roti','roti',1,100],['🥛','Milk','glass',1,120]],[['🥣','Oats with milk','bowl',1,200],['🍌','Banana','banana',1,100],['🌰','Almonds','almond',8,7]]]},
+{n:'Mid-morning snack',t:'11:00 AM',p:.1,i:'🍎',c:'#FFD9E8',o:[[['🍎','Apple','apple',1,95],['🌰','Almonds','almond',10,7]],[['🥛','Yogurt','bowl',1,100],['🍊','Orange','orange',1,60]]]},
+{n:'Lunch',t:'1:30 PM',p:.3,i:'🍛',c:'#FFE9C7',o:[[['🍗','Chicken curry','piece',2,150],['🫓','Whole wheat roti','roti',2,100],['🥗','Salad','plate',1,40]],[['🫘','Lentil curry (daal)','bowl',1,150],['🍚','Rice','bowl',1,200],['🥗','Salad','plate',1,40]]]},
+{n:'Evening snack',t:'5:00 PM',p:.1,i:'🍵',c:'#E9DEFF',o:[[['🫘','Chickpea salad','bowl',1,150],['🍵','Green tea','cup',1,5]],[['🥜','Roasted chickpeas','handful',1,100],['🍵','Green tea','cup',1,5]]]},
+{n:'Dinner',t:'8:00 PM',p:.25,i:'🌙',c:'#D3F6EC',o:[[['🥬','Sautéed vegetables','bowl',1,100],['🍗','Grilled chicken','piece',1,120],['🫓','Whole wheat roti','roti',1,100]],[['🐟','Grilled fish','piece',1,180],['🥗','Salad','plate',1,40],['🫓','Whole wheat roti','roti',1,100]]]}];
+function diet(){var b=P.w/Math.pow(P.h/100,2),g=A.goal,note='';
+if(b<18.5&&g==0){g=1;note='Your BMI is below the healthy range, so a weight-loss plan is not offered.'}
+var bmr=10*P.w+6.25*P.h-5*A.a-161,T=Math.max(1200,Math.round((bmr*1.35+[-350,0,300][g])/10)*10),h='',got=0;
+M.forEach(function(m,i){var tg=T*m.p,fs=m.o[opt[i]%m.o.length],base=fs.reduce(function(s,x){return s+x[3]*x[4]},0),f=Math.min(2.2,Math.max(.6,tg/base)),tot=0,r='';
+fs.forEach(function(x){var q=Math.max(.5,Math.round(x[3]*f*2)/2),k=Math.round(q*x[4]);tot+=k;r+='<div class="fd"><span class="e">'+x[0]+'</span><div>'+x[1]+'<small>'+q+' × '+x[2]+'</small></div><b>'+k+' kcal</b></div>'});
+if(eat[i])got+=tot;
+h+='<div class="card" style="'+(eat[i]?'opacity:.8':'')+'"><div class="mh"><div class="mi" style="background:'+m.c+'">'+m.i+'</div><div><b style="font-size:17px">'+m.n+'</b><small style="display:block;color:var(--mute)">'+tot+' kcal</small></div><span class="tm">⏰ '+m.t+'</span></div>'+r+'<div class="act"><button data-a="r" data-i="'+i+'">'+(rem[i]?'🔔 ON':'🔕 OFF')+'</button><button data-a="s" data-i="'+i+'">🔄 Swap</button><button class="'+(eat[i]?'ok':'')+'" data-a="e" data-i="'+i+'">'+(eat[i]?'✓ Eaten':'Mark eaten')+'</button></div></div>'});
+$('dm').innerHTML=h;$('dT').textContent=f(T);$('dE').textContent=f(got);$('dpb').style.width=Math.min(100,got/T*100)+'%';$('dw').textContent=P.w;
+$('dP').textContent=Math.round(P.w*(g==0?1.1:1))+' g';$('dW').textContent=(P.w*0.033).toFixed(1)+' L';$('va').textContent=A.a+' years';$('dn').textContent=note;
+document.querySelectorAll('#dg button').forEach(function(x){x.classList.toggle('s',+x.dataset.g==g)})}
+$('dm').onclick=function(e){var b=e.target.closest('button');if(!b)return;var i=+b.dataset.i,a=b.dataset.a;if(a=='r')rem[i]^=1;if(a=='s')opt[i]++;if(a=='e')eat[i]^=1;diet()};
+$('dg').onclick=function(e){var b=e.target.closest('button');if(b){A.goal=+b.dataset.g;diet()}};
+$('da').onclick=function(e){var b=e.target.closest('button');if(b){A.a=Math.min(70,Math.max(15,A.a+ +b.dataset.d));diet()}};
+function all(){home();hist();prof();guide();wtr();diet()}
+document.querySelectorAll('nav button').forEach(function(b){b.onclick=function(){document.querySelectorAll('nav button,section').forEach(function(e){e.classList.remove('on')});b.classList.add('on');$(b.dataset.t).classList.add('on');window.scrollTo(0,0)}});
+$('wk').onclick=function(e){var b=e.target.closest('button');if(b){sel=+b.dataset.i;hist()}};
+$('gl').onclick=function(e){var s=e.target.closest('.step');if(s){var i=+s.dataset.i;done[i]=!done[i];guide()}};
+document.querySelectorAll('.stp button').forEach(function(b){b.onclick=function(){var k=b.dataset.k;P[k]=Math.max(k=='g'?1000:30,P[k]+ +b.dataset.d);all()}});
+$('live').onclick=function(){liveOn=!liveOn;this.classList.toggle('off',!liveOn);this.querySelector('span').textContent=liveOn?'Counting ON':'Paused (demo)'};
+var TM='auto';try{TM=localStorage.getItem('qd-theme')||'auto'}catch(e){}
+function theme(m){TM=m;try{localStorage.setItem('qd-theme',m)}catch(e){}
+var r=document.documentElement;if(m=='auto')r.removeAttribute('data-theme');else r.dataset.theme=m;
+var dk=m=='dark'||(m=='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);
+$('tg').textContent=dk?'☀️':'🌙';
+document.querySelectorAll('#tm button').forEach(function(b){b.classList.toggle('s',b.dataset.m==m)})}
+$('tm').onclick=function(e){var b=e.target.closest('button');if(b)theme(b.dataset.m)};
+$('tg').onclick=function(){var r=document.documentElement,dk=r.dataset.theme=='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches);theme(dk?'light':'dark')};
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){if(TM=='auto')theme('auto')});
+theme(TM);
+setInterval(function(){if(NATIVE){try{steps=+AndroidSteps.today();week=JSON.parse(AndroidSteps.week());var st=AndroidSteps.status();$('live').querySelector('span').textContent=st;$('live').classList.toggle('off',st!='Counting ON')}catch(e){}home();if($('hist').classList.contains('on'))hist()}else if(liveOn){steps+=1+Math.floor(Math.random()*3);hrs[13]+=1;home();if($('hist').classList.contains('on'))hist()}},NATIVE?2000:1200);
+function hide(){$('splash').classList.add('h')}$('splash').onclick=hide;setTimeout(hide,2600);
+if(NATIVE)$('hrc').style.display='none';
+try{var o=JSON.parse(localStorage.getItem('sbn')||'null');if(o){P=o.P||P;A=o.A||A;done=o.done||done;if(o.d==new Date().toDateString()){wat=o.wat;eat=o.eat||eat}}}catch(e){}
+function sv(){try{localStorage.setItem('sbn',JSON.stringify({P:P,A:A,wat:wat,done:done,eat:eat,d:new Date().toDateString()}))}catch(e){}}
+setInterval(sv,2000);document.addEventListener('visibilitychange',sv);
+all();
+</script>
+</body>
+</html>
